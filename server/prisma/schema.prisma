@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  googleId  String     @unique
+  email     String     @unique
+  name      String
+  createdAt DateTime   @default(now())
+  userWords UserWord[]
+}
+
+model Word {
+  id                Int        @id @default(autoincrement())
+  englishWord       String     @unique
+  hebrewTranslation String
+  partOfSpeech      String?
+  createdAt         DateTime   @default(now())
+  userWords         UserWord[]
+}
+
+model UserWord {
+  userId                  Int
+  wordId                  Int
+  isLearned               Boolean @default(false)
+  customHebrewTranslation String?
+  user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word                    Word    @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wordId])
+}
