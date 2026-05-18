@@ -7,7 +7,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
 import { WordItem } from '../../types';
 import { useUpdateWord } from '../../hooks/useWords';
-import useStyles from './flashCardStyles';
+import useStyles, { POS_COLORS } from './flashCardStyles';
 
 interface Props {
   word: WordItem;
@@ -17,7 +17,7 @@ const FlashCard: React.FC<Props> = ({ word }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(word.hebrewTranslation);
-  const { classes, cx } = useStyles({ isLearned: word.isLearned });
+  const { classes, cx } = useStyles();
   const { mutate: updateWord } = useUpdateWord();
 
   const handleFlip = useCallback(
@@ -45,25 +45,40 @@ const FlashCard: React.FC<Props> = ({ word }) => {
     [word.wordId, editValue, updateWord]
   );
 
-  const handleEditCancel = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditValue(word.hebrewTranslation);
-    setIsEditing(false);
-  }, [word.hebrewTranslation]);
+  const handleEditCancel = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setEditValue(word.hebrewTranslation);
+      setIsEditing(false);
+    },
+    [word.hebrewTranslation]
+  );
 
   const partOfSpeech = word.partOfSpeech ?? 'Other';
 
   return (
     <Box className={classes.container} onClick={handleFlip}>
       <Box className={cx(classes.inner, isFlipped && 'flipped')}>
+
         {/* Front */}
-        <Box className={cx(classes.face, classes.front)}>
-          <IconButton className={classes.learnedCheckmark} onClick={handleLearnedToggle} size="small">
-            {word.isLearned ? (
-              <CheckCircleIcon fontSize="small" />
-            ) : (
-              <CheckCircleOutlineIcon fontSize="small" />
-            )}
+        <Box
+          className={cx(classes.face, classes.front)}
+          sx={word.isLearned ? {
+            border: '2px solid',
+            borderColor: 'success.main',
+            opacity: 0.7,
+            boxShadow: '0 4px 16px rgba(16,185,129,0.2)',
+          } : {}}
+        >
+          <IconButton
+            className={classes.learnedBtn}
+            onClick={handleLearnedToggle}
+            size="small"
+            sx={{ color: word.isLearned ? 'success.main' : 'action.disabled', transition: 'color 0.2s' }}
+          >
+            {word.isLearned
+              ? <CheckCircleIcon fontSize="small" />
+              : <CheckCircleOutlineIcon fontSize="small" />}
           </IconButton>
           <Typography className={classes.englishWord}>{word.englishWord}</Typography>
           <Typography className={classes.hint}>tap to reveal</Typography>
@@ -71,7 +86,12 @@ const FlashCard: React.FC<Props> = ({ word }) => {
 
         {/* Back */}
         <Box className={cx(classes.face, classes.back)}>
-          <Box className={classes.posBadge({ partOfSpeech })}>{partOfSpeech}</Box>
+          <Box
+            className={classes.posBadge}
+            style={{ backgroundColor: POS_COLORS[partOfSpeech] ?? POS_COLORS.Other }}
+          >
+            {partOfSpeech}
+          </Box>
 
           {isEditing ? (
             <TextField
@@ -119,6 +139,7 @@ const FlashCard: React.FC<Props> = ({ word }) => {
             )}
           </Box>
         </Box>
+
       </Box>
     </Box>
   );

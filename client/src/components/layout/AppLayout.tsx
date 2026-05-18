@@ -28,7 +28,7 @@ const AppLayout: React.FC<Props> = ({ children, onUploadClick }) => {
       <AppBar position="sticky" className={classes.appBar} elevation={0}>
         <Toolbar className={classes.toolbar}>
           <Typography component="span" className={classes.logo}>
-            📖 AmiratPrep
+            📖 Amirnet
           </Typography>
 
           <Box className={classes.nav}>

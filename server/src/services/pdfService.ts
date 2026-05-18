@@ -29,10 +29,19 @@ export async function extractUniqueWords(filePath: string): Promise<string[]> {
   const text = data.text.toLowerCase();
   const rawWords = text.match(/\b[a-z]{3,}\b/g) ?? [];
 
-  const uniqueWords = [...new Set(rawWords)].filter(
-    (w) => !STOP_WORDS.has(w) && w.length >= 3 && w.length <= 30
-  );
+  // Count frequency to sort by relevance
+  const freq = new Map<string, number>();
+  for (const w of rawWords) {
+    if (!STOP_WORDS.has(w) && w.length >= 3 && w.length <= 20) {
+      freq.set(w, (freq.get(w) ?? 0) + 1);
+    }
+  }
 
-  logger.info('Extracted unique words', { count: uniqueWords.length });
-  return uniqueWords;
+  // Sort by frequency desc — most repeated words first (most study-relevant)
+  const sorted = [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+
+  logger.info('Extracted unique words', { count: sorted.length });
+  return sorted;
 }

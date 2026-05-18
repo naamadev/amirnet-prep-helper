@@ -10,7 +10,6 @@ export const envConfig = {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/auth/google/callback',
-    translateApiKey: process.env.GOOGLE_TRANSLATE_API_KEY || '',
   },
   databaseUrl: process.env.DATABASE_URL || 'file:./dev.db',
 };

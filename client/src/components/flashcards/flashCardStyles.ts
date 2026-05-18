@@ -1,6 +1,6 @@
 import { makeStyles } from 'tss-react/mui';
 
-const POS_COLORS: Record<string, string> = {
+export const POS_COLORS: Record<string, string> = {
   Noun: '#4F46E5',
   Verb: '#059669',
   Adjective: '#D97706',
@@ -8,7 +8,7 @@ const POS_COLORS: Record<string, string> = {
   Other: '#6B7280',
 };
 
-const useStyles = makeStyles<{ isLearned: boolean }>()((theme, { isLearned }) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     perspective: 1000,
     width: '100%',
@@ -37,17 +37,12 @@ const useStyles = makeStyles<{ isLearned: boolean }>()((theme, { isLearned }) =>
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(2),
-    boxShadow: isLearned
-      ? `0 4px 16px ${theme.palette.success.main}30`
-      : '0 4px 24px rgba(0,0,0,0.10)',
-    opacity: isLearned ? 0.65 : 1,
-    transition: 'opacity 0.3s ease, box-shadow 0.3s ease',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+    transition: 'opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
   },
   front: {
     backgroundColor: theme.palette.background.paper,
-    border: isLearned
-      ? `2px solid ${theme.palette.success.main}`
-      : `2px solid transparent`,
+    border: '2px solid transparent',
   },
   back: {
     backgroundColor: theme.palette.primary.main,
@@ -72,15 +67,14 @@ const useStyles = makeStyles<{ isLearned: boolean }>()((theme, { isLearned }) =>
     direction: 'rtl',
     marginBottom: theme.spacing(1),
   },
-  posBadge: (params: { partOfSpeech: string }) => ({
-    backgroundColor: POS_COLORS[params.partOfSpeech] ?? POS_COLORS.Other,
+  posBadge: {
     color: '#fff',
     padding: '3px 10px',
     borderRadius: 999,
     fontSize: '0.7rem',
     fontWeight: 700,
     marginBottom: theme.spacing(1.5),
-  }),
+  },
   actions: {
     position: 'absolute',
     bottom: theme.spacing(1.5),
@@ -96,14 +90,11 @@ const useStyles = makeStyles<{ isLearned: boolean }>()((theme, { isLearned }) =>
     borderRadius: '50%',
     fontSize: '0.75rem',
   },
-  learnedCheckmark: {
+  learnedBtn: {
     position: 'absolute',
     top: theme.spacing(1),
     left: theme.spacing(1),
-    color: isLearned ? theme.palette.success.main : theme.palette.action.disabled,
-    transition: 'color 0.2s ease',
   },
 }));
 
 export default useStyles;
-export { POS_COLORS };

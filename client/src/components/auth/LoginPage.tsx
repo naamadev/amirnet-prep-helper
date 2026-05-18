@@ -14,10 +14,10 @@ const LoginPage: React.FC = () => {
       <Card className={classes.card} elevation={0}>
         <Box className={classes.logo}>📖</Box>
         <Typography variant="h4" className={classes.title}>
-          AmiratPrep Helper
+          Amirnet
         </Typography>
         <Typography variant="body1" className={classes.subtitle}>
-          Master English vocabulary for the Amirent exam with smart flashcards and AI-powered
+          Master English vocabulary for the Amirnet exam with smart flashcards and AI-powered
           translation.
         </Typography>
 

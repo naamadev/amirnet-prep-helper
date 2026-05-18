@@ -1,9 +1,11 @@
-import { v2 } from '@google-cloud/translate';
+import axios from 'axios';
 import { logger } from '../utils/logger';
 import { detectPartOfSpeech } from './pdfService';
-import { envConfig } from '../utils/envConfig';
 
-const BATCH_SIZE = 128;
+const MYMEMORY_URL = 'https://api.mymemory.translated.net/get';
+const CONCURRENT = 20;
+const DELAY_MS = 50;
+const EMAIL = 'naamae2003@gmail.com';
 
 export interface TranslatedWord {
   englishWord: string;
@@ -11,15 +13,19 @@ export interface TranslatedWord {
   partOfSpeech: string;
 }
 
-async function translateBatch(words: string[]): Promise<string[]> {
-  if (!envConfig.google.translateApiKey) {
-    logger.warn('No Google Translate API key — returning placeholder translations');
-    return words.map((w) => `[${w}]`);
-  }
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-  const translator = new v2.Translate({ key: envConfig.google.translateApiKey });
-  const [translations] = await translator.translate(words, { from: 'en', to: 'he' });
-  return Array.isArray(translations) ? translations : [translations];
+async function translateOne(word: string): Promise<string> {
+  try {
+    const { data } = await axios.get(MYMEMORY_URL, {
+      params: { q: word, langpair: 'en|he', de: EMAIL },
+      timeout: 6000,
+    });
+    const translated: string = data?.responseData?.translatedText ?? '';
+    return translated && translated !== word ? translated : `[${word}]`;
+  } catch {
+    return `[${word}]`;
+  }
 }
 
 export async function translateWords(
@@ -27,31 +33,28 @@ export async function translateWords(
   onProgress: (progress: number) => void
 ): Promise<TranslatedWord[]> {
   const results: TranslatedWord[] = [];
-  const totalBatches = Math.ceil(words.length / BATCH_SIZE);
+  const total = words.length;
 
-  for (let i = 0; i < words.length; i += BATCH_SIZE) {
-    const batch = words.slice(i, i + BATCH_SIZE);
-    const batchIndex = Math.floor(i / BATCH_SIZE);
+  logger.info('Starting translation via MyMemory', { total });
 
-    try {
-      const translations = await translateBatch(batch);
+  for (let i = 0; i < total; i += CONCURRENT) {
+    const batch = words.slice(i, i + CONCURRENT);
+    const translations = await Promise.all(batch.map(translateOne));
 
-      for (let j = 0; j < batch.length; j++) {
-        results.push({
-          englishWord: batch[j],
-          hebrewTranslation: translations[j] ?? batch[j],
-          partOfSpeech: detectPartOfSpeech(batch[j]),
-        });
-      }
+    for (let j = 0; j < batch.length; j++) {
+      results.push({
+        englishWord: batch[j],
+        hebrewTranslation: translations[j],
+        partOfSpeech: detectPartOfSpeech(batch[j]),
+      });
+    }
 
-      const progress = Math.round(((batchIndex + 1) / totalBatches) * 80) + 10;
-      onProgress(progress);
-      logger.info(`Translated batch ${batchIndex + 1}/${totalBatches}`);
-    } catch (error) {
-      logger.error('Translation batch failed', { batchIndex, error });
-      for (const word of batch) {
-        results.push({ englishWord: word, hebrewTranslation: `[${word}]`, partOfSpeech: 'Other' });
-      }
+    const progress = Math.round(((i + batch.length) / total) * 80) + 10;
+    onProgress(progress);
+    logger.info(`Translated ${Math.min(i + CONCURRENT, total)}/${total} words`);
+
+    if (i + CONCURRENT < total) {
+      await sleep(DELAY_MS);
     }
   }
 

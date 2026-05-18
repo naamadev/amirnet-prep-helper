@@ -129,7 +129,7 @@ const UploadZone: React.FC<Props> = ({ onComplete }) => {
           Drop your PDF here
         </Typography>
         <Typography className={classes.subtitle}>
-          Upload your Amirent study material and we&apos;ll extract and translate all vocabulary
+          Upload your Amirnet study material and we&apos;ll extract and translate all vocabulary
           automatically.
         </Typography>
         <Button variant="contained" className={classes.browseBtn} disableElevation>
