@@ -6,7 +6,9 @@ const LoginPage: React.FC = () => {
   const { classes } = useStyles();
 
   const handleGoogleLogin = () => {
-    const apiBase = import.meta.env.VITE_API_URL || '';
+    const apiBase = window.location.hostname === 'localhost'
+      ? ''
+      : 'https://amirnet-api.bitflow.co.il';
     window.location.href = `${apiBase}/api/auth/google`;
   };
 
