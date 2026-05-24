@@ -41,7 +41,10 @@ const Dashboard: React.FC = () => {
     <AppLayout onUploadClick={hasWords && !showUpload ? () => setShowUpload(true) : undefined}>
       <Box className={classes.root}>
         {!hasWords || showUpload ? (
-          <UploadZone onComplete={handleUploadComplete} />
+          <UploadZone
+            onComplete={handleUploadComplete}
+            onCancel={hasWords ? () => setShowUpload(false) : undefined}
+          />
         ) : (
           <FlashCardGrid words={data?.words ?? []} />
         )}

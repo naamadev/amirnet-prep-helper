@@ -8,9 +8,10 @@ import useStyles from './uploadZoneStyles';
 
 interface Props {
   onComplete?: () => void;
+  onCancel?: () => void;
 }
 
-const UploadZone: React.FC<Props> = ({ onComplete }) => {
+const UploadZone: React.FC<Props> = ({ onComplete, onCancel }) => {
   const [isDragging, setIsDragging] = useState(false);
   const { classes } = useStyles({ isDragging });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +137,11 @@ const UploadZone: React.FC<Props> = ({ onComplete }) => {
           Browse File
         </Button>
       </Box>
+      {onCancel && (
+        <Button variant="text" onClick={onCancel} sx={{ mt: 2, color: 'text.secondary' }}>
+          ← Back to flashcards
+        </Button>
+      )}
     </Box>
   );
 };
