@@ -18,4 +18,4 @@ ENV DATABASE_URL="file:/data/prod.db"
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma db push && node dist/server.js"]
+CMD ["sh", "-c", "mkdir -p /data/uploads && npx prisma db push && node dist/server.js"]
