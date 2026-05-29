@@ -3,8 +3,7 @@ import { logger } from '../utils/logger';
 import { detectPartOfSpeech } from './pdfService';
 
 const MYMEMORY_URL = 'https://api.mymemory.translated.net/get';
-const CONCURRENT = 20;
-const DELAY_MS = 50;
+const CONCURRENT = 40;
 const EMAIL = 'naamae2003@gmail.com';
 
 export interface TranslatedWord {
@@ -12,8 +11,6 @@ export interface TranslatedWord {
   hebrewTranslation: string;
   partOfSpeech: string;
 }
-
-const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 async function translateOne(word: string): Promise<string> {
   try {
@@ -30,33 +27,41 @@ async function translateOne(word: string): Promise<string> {
 
 export async function translateWords(
   words: string[],
-  onProgress: (progress: number) => void
+  onProgress: (progress: number) => void,
+  existingTranslations?: Map<string, { hebrewTranslation: string; partOfSpeech: string | null }>
 ): Promise<TranslatedWord[]> {
-  const results: TranslatedWord[] = [];
+  const toTranslate = existingTranslations
+    ? words.filter((w) => !existingTranslations.has(w))
+    : words;
+
   const total = words.length;
+  logger.info('Starting translation via MyMemory', { total, toTranslate: toTranslate.length, cached: total - toTranslate.length });
 
-  logger.info('Starting translation via MyMemory', { total });
+  const translated = new Map<string, string>();
 
-  for (let i = 0; i < total; i += CONCURRENT) {
-    const batch = words.slice(i, i + CONCURRENT);
-    const translations = await Promise.all(batch.map(translateOne));
+  for (let i = 0; i < toTranslate.length; i += CONCURRENT) {
+    const batch = toTranslate.slice(i, i + CONCURRENT);
+    const results = await Promise.all(batch.map(translateOne));
+    batch.forEach((word, idx) => translated.set(word, results[idx]));
 
-    for (let j = 0; j < batch.length; j++) {
-      results.push({
-        englishWord: batch[j],
-        hebrewTranslation: translations[j],
-        partOfSpeech: detectPartOfSpeech(batch[j]),
-      });
-    }
-
-    const progress = Math.round(((i + batch.length) / total) * 80) + 10;
-    onProgress(progress);
-    logger.info(`Translated ${Math.min(i + CONCURRENT, total)}/${total} words`);
-
-    if (i + CONCURRENT < total) {
-      await sleep(DELAY_MS);
-    }
+    const progress = Math.round(((i + batch.length) / Math.max(toTranslate.length, 1)) * 80) + 10;
+    onProgress(Math.min(progress, 89));
+    logger.info(`Translated ${Math.min(i + CONCURRENT, toTranslate.length)}/${toTranslate.length} words`);
   }
 
-  return results;
+  return words.map((word) => {
+    if (existingTranslations?.has(word)) {
+      const cached = existingTranslations.get(word)!;
+      return {
+        englishWord: word,
+        hebrewTranslation: cached.hebrewTranslation,
+        partOfSpeech: cached.partOfSpeech ?? detectPartOfSpeech(word),
+      };
+    }
+    return {
+      englishWord: word,
+      hebrewTranslation: translated.get(word) ?? `[${word}]`,
+      partOfSpeech: detectPartOfSpeech(word),
+    };
+  });
 }

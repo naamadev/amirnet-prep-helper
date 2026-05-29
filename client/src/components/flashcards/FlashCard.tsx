@@ -5,9 +5,11 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { WordItem } from '../../types';
 import { useUpdateWord } from '../../hooks/useWords';
 import useStyles, { POS_COLORS } from './flashCardStyles';
+import WordExampleModal from './WordExampleModal';
 
 interface Props {
   word: WordItem;
@@ -17,6 +19,7 @@ const FlashCard: React.FC<Props> = ({ word }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(word.hebrewTranslation);
+  const [showExamples, setShowExamples] = useState(false);
   const { classes, cx } = useStyles();
   const { mutate: updateWord } = useUpdateWord();
 
@@ -128,19 +131,36 @@ const FlashCard: React.FC<Props> = ({ word }) => {
                 </IconButton>
               </>
             ) : (
-              <IconButton
-                className={classes.actionBtn}
-                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                size="small"
-                sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.2)' }}
-              >
-                <EditIcon fontSize="inherit" />
-              </IconButton>
+              <>
+                <IconButton
+                  className={classes.actionBtn}
+                  onClick={(e) => { e.stopPropagation(); setShowExamples(true); }}
+                  size="small"
+                  sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.2)' }}
+                  title="See word in sentences"
+                >
+                  <MenuBookIcon fontSize="inherit" />
+                </IconButton>
+                <IconButton
+                  className={classes.actionBtn}
+                  onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                  size="small"
+                  sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.2)' }}
+                >
+                  <EditIcon fontSize="inherit" />
+                </IconButton>
+              </>
             )}
           </Box>
         </Box>
 
       </Box>
+
+      <WordExampleModal
+        word={word.englishWord}
+        open={showExamples}
+        onClose={() => setShowExamples(false)}
+      />
     </Box>
   );
 };

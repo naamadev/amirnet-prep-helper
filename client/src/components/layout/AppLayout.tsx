@@ -1,9 +1,12 @@
-import React, { ReactNode, useCallback } from 'react';
-import { Box, AppBar, Toolbar, Typography, Button, Avatar } from '@mui/material';
+import React, { ReactNode, useCallback, useState } from 'react';
+import { Box, AppBar, Toolbar, Typography, Button, Avatar, IconButton, Tooltip } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/apiClient';
 import useStyles from './appLayoutStyles';
+import ReminderDialog from '../reminders/ReminderDialog';
+import { useReminder } from '../../hooks/useReminder';
 
 interface Props {
   children: ReactNode;
@@ -13,6 +16,9 @@ interface Props {
 const AppLayout: React.FC<Props> = ({ children, onUploadClick }) => {
   const { classes } = useStyles();
   const { user, refetch } = useAuth();
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const { data: reminderData } = useReminder();
+  const hasReminder = !!reminderData?.reminder;
 
   const handleLogout = useCallback(async () => {
     await apiClient.post('/auth/logout');
@@ -37,6 +43,16 @@ const AppLayout: React.FC<Props> = ({ children, onUploadClick }) => {
                 Upload More
               </Button>
             )}
+            <Tooltip title={hasReminder ? 'Manage study reminder' : 'Set study reminder'}>
+              <IconButton
+                onClick={() => setReminderOpen(true)}
+                color="inherit"
+                size="small"
+                sx={{ mr: 0.5, color: hasReminder ? 'warning.light' : 'inherit' }}
+              >
+                <NotificationsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <Typography className={classes.userName}>{user?.name}</Typography>
             <Avatar className={classes.userAvatar}>{initials}</Avatar>
             <Button
@@ -52,6 +68,8 @@ const AppLayout: React.FC<Props> = ({ children, onUploadClick }) => {
       </AppBar>
 
       <Box className={classes.content}>{children}</Box>
+
+      <ReminderDialog open={reminderOpen} onClose={() => setReminderOpen(false)} />
     </Box>
   );
 };

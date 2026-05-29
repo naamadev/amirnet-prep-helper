@@ -31,3 +31,15 @@ export interface JobStatus {
 }
 
 export type PartOfSpeechType = 'Noun' | 'Verb' | 'Adjective' | 'Adverb' | 'Other';
+
+export interface Reminder {
+  id: number;
+  userId: number;
+  calendarEventId: string | null;
+  hour: number;
+  minute: number;
+  durationMins: number;
+  daysOfWeek: string;
+  isActive: boolean;
+  createdAt: string;
+}

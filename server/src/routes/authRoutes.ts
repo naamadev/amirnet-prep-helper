@@ -9,7 +9,11 @@ authRouter.post('/logout', authController.logout);
 
 authRouter.get(
   '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+  passport.authenticate('google', {
+    scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.events'],
+    accessType: 'offline',
+    prompt: 'consent',
+  } as object)
 );
 
 authRouter.get(

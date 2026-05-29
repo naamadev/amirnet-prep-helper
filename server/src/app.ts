@@ -11,6 +11,7 @@ import { AppError } from './utils/errors';
 import { authRouter } from './routes/authRoutes';
 import { uploadRouter } from './routes/uploadRoutes';
 import { wordsRouter } from './routes/wordsRoutes';
+import { remindersRouter } from './routes/remindersRoutes';
 
 const prisma = new PrismaClient();
 
@@ -49,16 +50,21 @@ passport.use(
       clientSecret: envConfig.google.clientSecret,
       callbackURL: envConfig.google.callbackUrl,
     },
-    async (_accessToken, _refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value ?? '';
+        const tokenUpdate: Record<string, string> = { googleAccessToken: accessToken };
+        if (refreshToken) tokenUpdate.googleRefreshToken = refreshToken;
+
         const user = await prisma.user.upsert({
           where: { googleId: profile.id },
-          update: { name: profile.displayName, email },
+          update: { name: profile.displayName, email, ...tokenUpdate },
           create: {
             googleId: profile.id,
             email,
             name: profile.displayName,
+            googleAccessToken: accessToken,
+            googleRefreshToken: refreshToken ?? null,
           },
         });
         done(null, user);
@@ -87,6 +93,7 @@ passport.deserializeUser(async (id: number, done) => {
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/words', wordsRouter);
+app.use('/api/reminders', remindersRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

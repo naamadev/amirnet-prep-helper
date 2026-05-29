@@ -23,7 +23,16 @@ async function processJob(jobId: string, filePath: string, userId: number): Prom
     const uniqueWords = await extractUniqueWords(filePath);
     setJobProgress(jobId, 10);
 
-    const translatedWords = await translateWords(uniqueWords, (p) => setJobProgress(jobId, p));
+    // Pre-fetch already-translated words to skip redundant API calls
+    const existingWords = await prisma.word.findMany({
+      where: { englishWord: { in: uniqueWords } },
+      select: { englishWord: true, hebrewTranslation: true, partOfSpeech: true },
+    });
+    const existingMap = new Map(
+      existingWords.map((w) => [w.englishWord, { hebrewTranslation: w.hebrewTranslation, partOfSpeech: w.partOfSpeech }])
+    );
+
+    const translatedWords = await translateWords(uniqueWords, (p) => setJobProgress(jobId, p), existingMap);
     setJobProgress(jobId, 90);
 
     // Upsert Words and create UserWords in batches
